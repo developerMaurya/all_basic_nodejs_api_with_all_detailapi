@@ -1,0 +1,129 @@
+<!-- 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Tracker</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Google Location Tracker</h1>
+        <form action="/track" method="POST">
+            <input type="text" name="from" placeholder="From (e.g., Lucknow)" required>
+            <input type="text" name="to" placeholder="To (e.g., Varanasi)" required>
+            <button type="submit">Track</button>
+        </form>
+
+        <% if (from && to) { %>
+        <h2>Tracking: <%= from %> to <%= to %></h2>
+        <div id="map"></div>
+        <script>
+            function initMap() {
+                const directionsService = new google.maps.DirectionsService();
+                const directionsRenderer = new google.maps.DirectionsRenderer();
+                const map = new google.maps.Map(document.getElementById("map"), {
+                    zoom: 7,
+                    center: { lat: 26.8467, lng: 80.9462 }, // Default center
+                });
+                directionsRenderer.setMap(map);
+
+                const request = {
+                    origin: "<%= from %>",
+                    destination: "<%= to %>",
+                    travelMode: "DRIVING",
+                };
+
+                directionsService.route(request, (result, status) => {
+                    if (status == "OK") {
+                        directionsRenderer.setDirections(result);
+                    } else {
+                        alert("Could not retrieve directions: " + status);
+                    }
+                });
+            }
+
+            initMap();
+        </script>
+        <% } %>
+    </div>
+</body>
+</html> -->
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Tracker</title>
+    <link rel="stylesheet" href="/styles.css">
+    <!-- Leaflet.js -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Location Tracker</h1>
+        <form action="/track" method="POST">
+            <input type="text" name="from" placeholder="From (e.g., Lucknow)" required>
+            <input type="text" name="to" placeholder="To (e.g., Varanasi)" required>
+            <button type="submit">Track</button>
+        </form>
+
+        <% if (from && to) { %>
+        <h2>Tracking: <%= from %> to <%= to %></h2>
+        <div id="map"></div>
+        <script>
+            const map = L.map('map').setView([26.8467, 80.9462], 7); // Default location
+
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Fetch coordinates for "from" and "to" locations
+            async function getCoordinates(location) {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${location}`);
+                const data = await response.json();
+                if (data.length > 0) {
+                    return [data[0].lat, data[0].lon];
+                } else {
+                    alert(`Location "${location}" not found. Please try again.`);
+                    throw new Error("Location not found");
+                }
+            }
+
+            async function plotRoute() {
+                try {
+                    const fromCoords = await getCoordinates("<%= from %>");
+                    const toCoords = await getCoordinates("<%= to %>");
+
+                    // Plot route
+                    L.Routing.control({
+                        waypoints: [
+                            L.latLng(fromCoords[0], fromCoords[1]),
+                            L.latLng(toCoords[0], toCoords[1])
+                        ],
+                        routeWhileDragging: true
+                    }).addTo(map);
+
+                    // Center map on "from" location
+                    map.setView(L.latLng(fromCoords[0], fromCoords[1]), 7);
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            plotRoute();
+        </script>
+        <% } %>
+    </div>
+</body>
+</html>
