@@ -4,6 +4,14 @@ export const findUserByEmail = (email, callback) => {
     const query = 'SELECT * FROM users WHERE email = ?';
     connection.query(query, [email], callback);
 };
+export const getUsers = (callback) => {
+    const query = 'SELECT id,name,email,role FROM users';
+    connection.query(query, callback);
+};
+export const getUser = (id,callback) => {
+    const query = 'SELECT id,name,email,role FROM users WHERE id = ?';
+    connection.query(query,[id],callback);
+};
 export const createUser=(username, email, hashedPassword, userRole,callback)=>{
     const query='INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)';
     connection.query(query,[username, email, hashedPassword, userRole],callback)

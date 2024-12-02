@@ -1,6 +1,6 @@
 
 // usercreate 
-import {findUserByEmail,createUser,createKyc,logoutdata} from '../models/usermodel.js';
+import {findUserByEmail,createUser,createKyc,logoutdata,getUsers,getUser} from '../models/usermodel.js';
 import {STATUS_CODES} from '../statusCode/userStatusCode.js';
 import  {USER_MESSAGES} from '../responseMessage/userResponseMessage.js';
 import connection from '../index.js'; // Import MySQL connection
@@ -10,37 +10,12 @@ import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 
-export const forgotPassword = async (req, res) => {
-    const { email } = req.body;
-    if (!email) {
-        return res.status(STATUS_CODES.REQUIRED).json({ message: USER_MESSAGES.ALL_FILD_REQUIRED });
-    }
-
-    findUserByEmail(email, async (error, results) => {
-        if (error || results.length === 0) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ message: USER_MESSAGES.USER_NOT_FOUND });
-        }
-
-        const token = crypto.randomBytes(20).toString('hex');
-        const expiration = new Date(Date.now() + 3600000); // Token valid for 1 hour
-
-        const query = 'UPDATE users SET password_reset_token = ?, token_expiration = ? WHERE email = ?';
-        connection.query(query, [token, expiration, email], (err) => {
-            if (err) {
-                return res.status(STATUS_CODES.SERVER_ERROR).json({ message: USER_MESSAGES.DATABASE_ERROR });
-            }
-            res.status(STATUS_CODES.SUCCESS).json({statusCode:STATUS_CODES.SUCCESS, message: USER_MESSAGES.RESET_TOKEN_SENT, token });
-        });
-    });
-};
-
 export const login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
         findUserByEmail(email, async (error, results) => {
             if (error) {
-                console.error('Error checking user:', error);
                 return res.status(STATUS_CODES.SERVER_ERROR).json({ error: USER_MESSAGES.USER_CHECK_ERROR });
             }
 
@@ -67,7 +42,6 @@ export const login = async (req, res) => {
         res.status(STATUS_CODES.SERVER_ERROR).json({ error: error.message });
     }
 };
-
 export const create = async (req, res) => {
     try {
 	const { username, email, password, role } = req.body;
@@ -90,11 +64,32 @@ export const create = async (req, res) => {
                             res.status(STATUS_CODES.SERVER_ERROR).json({ error: USER_MESSAGES.FAILD_TO_HASHPASSWORD});
                         }
     } catch (error) {
-        console.error('Error creating user:', error);
         res.status(500).json({ error: error.message });
     }
 };
+export const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+        return res.status(STATUS_CODES.REQUIRED).json({ message: USER_MESSAGES.ALL_FILD_REQUIRED });
+    }
 
+    findUserByEmail(email, async (error, results) => {
+        if (error || results.length === 0) {
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: USER_MESSAGES.USER_NOT_FOUND });
+        }
+
+        const token = crypto.randomBytes(20).toString('hex');
+        const expiration = new Date(Date.now() + 3600000); // Token valid for 1 hour
+
+        const query = 'UPDATE users SET password_reset_token = ?, token_expiration = ? WHERE email = ?';
+        connection.query(query, [token, expiration, email], (err) => {
+            if (err) {
+                return res.status(STATUS_CODES.SERVER_ERROR).json({ message: USER_MESSAGES.DATABASE_ERROR });
+            }
+            res.status(STATUS_CODES.SUCCESS).json({statusCode:STATUS_CODES.SUCCESS, message: USER_MESSAGES.RESET_TOKEN_SENT, token });
+        });
+    });
+};
 export const createkYC = async (req, res) => {
     try {
         const { email_id, password, account_holder_name, account_number, confirm_account_number, ifsc_code, bank_name, branch } = req.body;
@@ -113,7 +108,6 @@ export const createkYC = async (req, res) => {
         res.status(STATUS_CODES.SERVER_ERROR).json({ error: error.message });
     }
 };
-
 export const logout = async (req, res) => {
     const token = req.body.token;
 
@@ -217,7 +211,6 @@ export const sendEmailVerification = (req, res) => {
         res.status(STATUS_CODES.SUCCESS).json({ message: USER_MESSAGES.VERIFICATION_EMAIL_SENT, token });
     });
 };
-
 export const verifyEmail = (req, res) => {
     const { token } = req.body;
     try {
@@ -259,5 +252,28 @@ export const recoverAccount = (req, res) => {
             return res.status(STATUS_CODES.NOT_FOUND).json({ message: USER_MESSAGES.ACCOUNT_NOT_FOUND_OR_ACTIVE });
         }
         res.status(STATUS_CODES.SUCCESS).json({ message: USER_MESSAGES.ACCOUNT_RECOVERED });
+    });
+};
+export const getAllUsers = (req, res) => {
+    getUsers(async (error, results) => {
+        if (error || results.length === 0) {
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: USER_MESSAGES.USER_NOT_FOUND });
+        }
+        res.status(STATUS_CODES.SUCCESS).json({ statusCode: STATUS_CODES.SUCCESS,results });
+    });
+};
+export const getSingleUser = (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+            return res
+                .status(STATUS_CODES.UNAUTHORIZED)
+                .json({ message: USER_MESSAGES.TOKEN_MISSING });
+        }
+        const { id } = jwt.verify(token, process.env.JWT_SECRET);
+    getUser(id,async (error, results) => {
+        if (error || results.length === 0) {
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: USER_MESSAGES.USER_NOT_FOUND });
+        }
+        res.status(STATUS_CODES.SUCCESS).json({ statusCode: STATUS_CODES.SUCCESS,results });
     });
 };

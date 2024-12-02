@@ -17,8 +17,10 @@ export const USER_MESSAGES = {
     PROFILE_UPDATED:"Profile updated successfully",
     PASSWORD_CHANGE_SUCCESS: "Password changed successfully",
     VERIFICATION_EMAIL_SENT: "Verification email sent",
+    ALL_USERS:"All Users Records",
     EMAIL_VERIFIED: "Email verified successfully",
     ACCOUNT_DELETED: "Account deleted successfully",
     ACCOUNT_NOT_FOUND_OR_ACTIVE: "Account not found or already active",
-    ACCOUNT_RECOVERED: "Account recovered successfully"
+    ACCOUNT_RECOVERED: "Account recovered successfully",
+    TOKEN_MISSING:"Token messing"
 };
