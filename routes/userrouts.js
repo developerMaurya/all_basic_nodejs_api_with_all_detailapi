@@ -3,10 +3,14 @@ import { create,login,createkYC,logout,resetPassword,updateProfile,forgotPasswor
     changePassword,sendEmailVerification,verifyEmail,deleteAccount,recoverAccount,getAllUsers,getSingleUser
 } from "../controller/usercontroller.js";
 import { isAdmin, verifyToken } from '../middleware/middleware.js';
-
+import { sendOtp, verifyOtp } from "../controller/otpController.js";
 // create api
 const route = express.Router();
 
+
+
+route.post('/send', sendOtp);
+route.post('/verify', verifyOtp);
 // registraion new user api  or add new user
 route.post("/create", create);
 // login api 
