@@ -8,12 +8,14 @@ import cors from 'cors';
 import http from 'http'; // Import http to use with socket.io
 import { Server } from 'socket.io'; // Import Server from socket.io
 import route from './routes/userrouts.js';
+import pdfRoutes from './routes/pdfRoutes.js';
 import path from "path";
 import webpush from "web-push"; // Import web-push
 import passport from "passport";
 import session from "express-session";
 // import GoogleStrategy from "passport-google-oauth20".Strategy;
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import fs from 'fs';
 
 
 
@@ -35,8 +37,12 @@ const io = new Server(server, {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.set("view engine", "ejs");
 
+if (!fs.existsSync('uploads')) {
+    fs.mkdirSync('uploads');
+}
 app.use(
     cors(),
     session({
@@ -64,7 +70,7 @@ connection.connect((err) => {
 
 app.use("/api", route);
 
-
+app.use('/api', pdfRoutes);
 // ***************** web push notification ************
 // Web Push Setup
 const publicVapidKey =

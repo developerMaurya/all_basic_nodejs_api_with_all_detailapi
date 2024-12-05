@@ -29,7 +29,7 @@ export const login = async (req, res) => {
                 return res.status(STATUS_CODES.UNAUTHORIZED).json({ message: USER_MESSAGES.INVALID_PASSWORD });
             }
 
-            const token = jwt.sign({ id: user.id, role: user.role }, 'your_jwt_secret', { expiresIn: '3d' });
+            const token = jwt.sign({ id: user.id,name:user.name,email:user.email, role: user.role }, 'your_jwt_secret', { expiresIn: '3d' });
 
             res.status(STATUS_CODES.SUCCESS).json({
                 statusCode: STATUS_CODES.SUCCESS,
