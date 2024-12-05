@@ -9,6 +9,7 @@ import http from 'http'; // Import http to use with socket.io
 import { Server } from 'socket.io'; // Import Server from socket.io
 import route from './routes/userrouts.js';
 import pdfRoutes from './routes/pdfRoutes.js';
+import videoRoutes from './routes/videoRoutes.js';
 import path from "path";
 import webpush from "web-push"; // Import web-push
 import passport from "passport";
@@ -69,7 +70,7 @@ connection.connect((err) => {
 
 
 app.use("/api", route);
-
+app.use('/api', videoRoutes);
 app.use('/api', pdfRoutes);
 // ***************** web push notification ************
 // Web Push Setup
